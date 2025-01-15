@@ -9,7 +9,7 @@
       
       
       
-        <link rel="prev" href="../../lr1/task5/">
+        <link rel="prev" href="../about/">
       
       
         <link rel="next" href="../views/">
@@ -387,6 +387,27 @@
             Lab №2
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../about/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    About
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1080,6 +1101,15 @@
 <li>country - страна участника, тип char, максимальная длина 50</li>
 <li>user - пользователь в фреймворке django, ассоциированный с участником, внешний ключ на user, обязательное поле</li>
 </ul>
+<pre><code class="language-python">class Participant(models.Model):
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.CharField(max_length=50, default='')
+    birth_date = models.DateField(blank=True, null=True)
+    profile_picture = models.URLField(blank=True, null=True)
+    country = models.CharField(max_length=50, blank=True, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+</code></pre>
 <h2 id="_3">Конференция</h2>
 <p>Название: Conference</p>
 <ul>
@@ -1093,6 +1123,17 @@
 <li>auditors - список слушателей конференции, тип manyToMany с моделью Participant через модель ConferenceAuditor</li>
 <li>speakers - список выступающих конференции, тип manyToMany с моделью Participant через модель ConferencePerformance</li>
 </ul>
+<pre><code class="language-python">class Conference(models.Model):
+    name = models.CharField(max_length=150)
+    creator = models.ForeignKey(Participant, on_delete=models.CASCADE)
+    description = models.CharField(max_length=500, blank=True, null=True)
+    participate_conditionals = models.CharField(max_length=500, blank=True, null=True)
+    location = models.CharField(max_length=150)
+    date_of_start = models.DateTimeField()
+    date_of_finish = models.DateTimeField()
+    auditors = models.ManyToManyField(Participant, through='ConferenceAuditor', related_name='conference_auditors')
+    speakers = models.ManyToManyField(Participant, through='ConferencePerformance', related_name='conference_speakers')
+</code></pre>
 <h2 id="_4">Слушатель конференции</h2>
 <p>Название - ConferenceAuditor</p>
 <ul>
@@ -1100,6 +1141,10 @@
 <li>auditor - участник, ассоциированный с записью, внешний ключ к Participant, обязателен</li>
 </ul>
 <p>Служит таблицей для отношения ManyToMany между Conference и Participant</p>
+<pre><code class="language-python">class ConferenceAuditor(models.Model):
+    conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
+    auditor = models.ForeignKey(Participant, on_delete=models.CASCADE)
+</code></pre>
 <h2 id="_5">Выступление</h2>
 <p>Название - ConferencePerformance</p>
 <ul>
@@ -1108,6 +1153,12 @@
 <li>speaking_topic - название выступления, тип char, максимальная длина 200, обязателен</li>
 <li>recommended - рекомендован к публикации или нет, тип boolean, обязателен, по умолчанию False</li>
 </ul>
+<pre><code class="language-python">class ConferencePerformance(models.Model):
+    conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
+    speaker = models.ForeignKey(Participant, on_delete=models.CASCADE)
+    speaking_topic = models.CharField(max_length=200)
+    recommended = models.BooleanField(default=False)
+</code></pre>
 <h2 id="_6">Отзыв к конференции</h2>
 <p>Название - Review</p>
 <ul>
@@ -1117,6 +1168,13 @@
 <li>author - автор отзыва, внешний ключ к Participant, обязателен</li>
 <li>date - дата и время последнего изменения отзыва, тип datetime, обязателен, по умолчанию timezone.now()</li>
 </ul>
+<pre><code class="language-python">class Review(models.Model):
+    grade = models.PositiveSmallIntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)])
+    description = models.CharField(max_length=1000, verbose_name='Speaking topic')
+    conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
+    author = models.ForeignKey(Participant, on_delete=models.CASCADE)
+    date = models.DateTimeField(default=timezone.now)
+</code></pre>
 <h2 id="_7">Комментарий к отзыву</h2>
 <p>Название - Commentary</p>
 <ul>
@@ -1125,6 +1183,12 @@
 <li>description - содержание комментария, тип char, максимальная длина 600, обязателен</li>
 <li>date - дата и время создания комментария, тип datetime, обязателен, по умолчанию timezone.now()</li>
 </ul>
+<pre><code class="language-python">class Commentary(models.Model):
+    review = models.ForeignKey(Review, on_delete=models.CASCADE)
+    author = models.ForeignKey(Participant, on_delete=models.CASCADE)
+    description = models.CharField(max_length=600)
+    date = models.DateTimeField(default=timezone.now)
+</code></pre>
 
 
 
